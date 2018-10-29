@@ -2,13 +2,13 @@ package cn.jerryshell.polls.controller;
 
 import cn.jerryshell.polls.annotation.RoleRequired;
 import cn.jerryshell.polls.annotation.TokenRequired;
-import cn.jerryshell.polls.dao.ChoiceDAO;
 import cn.jerryshell.polls.exception.ResourceNotFoundException;
 import cn.jerryshell.polls.model.Choice;
 import cn.jerryshell.polls.model.Poll;
 import cn.jerryshell.polls.model.Role;
 import cn.jerryshell.polls.payload.CreateNewChoiceForm;
 import cn.jerryshell.polls.payload.UpdateChoiceForm;
+import cn.jerryshell.polls.service.ChoiceService;
 import cn.jerryshell.polls.service.PollService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +21,7 @@ import java.util.List;
 @RequestMapping("/polls/{pollId}/choices")
 public class ChoiceController {
     private PollService pollService;
-
-    private ChoiceDAO choiceDAO;
+    private ChoiceService choiceService;
 
     @Autowired
     public void setPollService(PollService pollService) {
@@ -30,13 +29,13 @@ public class ChoiceController {
     }
 
     @Autowired
-    public void setChoiceDAO(ChoiceDAO choiceDAO) {
-        this.choiceDAO = choiceDAO;
+    public void setChoiceService(ChoiceService choiceService) {
+        this.choiceService = choiceService;
     }
 
     @GetMapping
     public List<Choice> findByPollId(@PathVariable Long pollId) {
-        return choiceDAO.findByPollId(pollId);
+        return choiceService.findByPollId(pollId);
     }
 
     @TokenRequired
@@ -50,7 +49,7 @@ public class ChoiceController {
         Choice choice = new Choice();
         choice.setText(form.getText());
         choice.setPoll(poll);
-        return choiceDAO.save(choice);
+        return choiceService.create(choice);
     }
 
     @TokenRequired
@@ -63,11 +62,11 @@ public class ChoiceController {
             throw ResourceNotFoundException.build("Poll", "ID", pollId);
         }
 
-        Choice choice = choiceDAO.findById(id)
+        Choice choice = choiceService.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.build("Choice", "ID", id));
 
         choice.setText(form.getText());
-        return choiceDAO.save(choice);
+        return choiceService.update(choice);
     }
 
     @TokenRequired
@@ -79,11 +78,11 @@ public class ChoiceController {
             throw ResourceNotFoundException.build("Poll", "ID", pollId);
         }
 
-        if (!choiceDAO.existsById(id)) {
+        if (!choiceService.existsById(id)) {
             throw ResourceNotFoundException.build("Choice", "ID", id);
         }
 
-        choiceDAO.deleteById(id);
+        choiceService.delete(id);
         return ResponseEntity.ok().build();
     }
 }

@@ -2,7 +2,6 @@ package cn.jerryshell.polls.controller;
 
 import cn.jerryshell.polls.annotation.RoleRequired;
 import cn.jerryshell.polls.annotation.TokenRequired;
-import cn.jerryshell.polls.dao.ChoiceDAO;
 import cn.jerryshell.polls.dao.UserDAO;
 import cn.jerryshell.polls.exception.ResourceNotFoundException;
 import cn.jerryshell.polls.model.Choice;
@@ -12,6 +11,7 @@ import cn.jerryshell.polls.model.User;
 import cn.jerryshell.polls.payload.CreateNewPollForm;
 import cn.jerryshell.polls.payload.PollStatusResponse;
 import cn.jerryshell.polls.payload.UpdatePollForm;
+import cn.jerryshell.polls.service.ChoiceService;
 import cn.jerryshell.polls.service.PollService;
 import cn.jerryshell.polls.service.VoteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +26,20 @@ import java.util.List;
 @RequestMapping("/polls")
 public class PollController {
     private PollService pollService;
+    private ChoiceService choiceService;
     private VoteService voteService;
 
+    // TODO
     private UserDAO userDAO;
-    private ChoiceDAO choiceDAO;
 
     @Autowired
     public void setPollService(PollService pollService) {
         this.pollService = pollService;
+    }
+
+    @Autowired
+    public void setChoiceService(ChoiceService choiceService) {
+        this.choiceService = choiceService;
     }
 
     @Autowired
@@ -44,11 +50,6 @@ public class PollController {
     @Autowired
     public void setUserDAO(UserDAO userDAO) {
         this.userDAO = userDAO;
-    }
-
-    @Autowired
-    public void setChoiceDAO(ChoiceDAO choiceDAO) {
-        this.choiceDAO = choiceDAO;
     }
 
     @GetMapping("/{id}")
@@ -69,7 +70,7 @@ public class PollController {
         }
 
         List<PollStatusResponse> responseList = new ArrayList<>();
-        List<Choice> choiceList = choiceDAO.findByPollId(id);
+        List<Choice> choiceList = choiceService.findByPollId(id);
         for (Choice choice : choiceList) {
             Long count = voteService.countByChoiceId(choice.getId());
 
