@@ -19,7 +19,7 @@
 - [x] User Service
 - [x] Poll Service
 - [ ] Choice Service
-- [ ] Vote Service
+- [x] Vote Service
 
 ### v1.0(0)
 

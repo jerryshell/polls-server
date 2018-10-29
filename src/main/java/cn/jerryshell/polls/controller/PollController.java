@@ -4,7 +4,6 @@ import cn.jerryshell.polls.annotation.RoleRequired;
 import cn.jerryshell.polls.annotation.TokenRequired;
 import cn.jerryshell.polls.dao.ChoiceDAO;
 import cn.jerryshell.polls.dao.UserDAO;
-import cn.jerryshell.polls.dao.VoteDAO;
 import cn.jerryshell.polls.exception.ResourceNotFoundException;
 import cn.jerryshell.polls.model.Choice;
 import cn.jerryshell.polls.model.Poll;
@@ -14,6 +13,7 @@ import cn.jerryshell.polls.payload.CreateNewPollForm;
 import cn.jerryshell.polls.payload.PollStatusResponse;
 import cn.jerryshell.polls.payload.UpdatePollForm;
 import cn.jerryshell.polls.service.PollService;
+import cn.jerryshell.polls.service.VoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,14 +26,19 @@ import java.util.List;
 @RequestMapping("/polls")
 public class PollController {
     private PollService pollService;
+    private VoteService voteService;
 
     private UserDAO userDAO;
     private ChoiceDAO choiceDAO;
-    private VoteDAO voteDAO;
 
     @Autowired
     public void setPollService(PollService pollService) {
         this.pollService = pollService;
+    }
+
+    @Autowired
+    public void setVoteService(VoteService voteService) {
+        this.voteService = voteService;
     }
 
     @Autowired
@@ -44,11 +49,6 @@ public class PollController {
     @Autowired
     public void setChoiceDAO(ChoiceDAO choiceDAO) {
         this.choiceDAO = choiceDAO;
-    }
-
-    @Autowired
-    public void setVoteDAO(VoteDAO voteDAO) {
-        this.voteDAO = voteDAO;
     }
 
     @GetMapping("/{id}")
@@ -71,7 +71,7 @@ public class PollController {
         List<PollStatusResponse> responseList = new ArrayList<>();
         List<Choice> choiceList = choiceDAO.findByPollId(id);
         for (Choice choice : choiceList) {
-            Long count = voteDAO.countByChoiceId(choice.getId());
+            Long count = voteService.countByChoiceId(choice.getId());
 
             PollStatusResponse pollStatusResponse = new PollStatusResponse();
             pollStatusResponse.setChoiceId(choice.getId());

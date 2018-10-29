@@ -4,11 +4,11 @@ import cn.jerryshell.polls.annotation.RoleRequired;
 import cn.jerryshell.polls.annotation.TokenRequired;
 import cn.jerryshell.polls.dao.ChoiceDAO;
 import cn.jerryshell.polls.dao.UserDAO;
-import cn.jerryshell.polls.dao.VoteDAO;
 import cn.jerryshell.polls.exception.ResourceNotFoundException;
 import cn.jerryshell.polls.model.*;
 import cn.jerryshell.polls.payload.CreateNewVoteForm;
 import cn.jerryshell.polls.service.PollService;
+import cn.jerryshell.polls.service.VoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,14 +16,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/polls/{pollId}/votes")
 public class VoteController {
     private PollService pollService;
+    private VoteService voteService;
 
-    private VoteDAO voteDAO;
     private UserDAO userDAO;
     private ChoiceDAO choiceDAO;
 
     @Autowired
-    public VoteController(VoteDAO voteDAO, UserDAO userDAO, ChoiceDAO choiceDAO) {
-        this.voteDAO = voteDAO;
+    public VoteController(UserDAO userDAO, ChoiceDAO choiceDAO) {
         this.userDAO = userDAO;
         this.choiceDAO = choiceDAO;
     }
@@ -33,13 +32,18 @@ public class VoteController {
         this.pollService = pollService;
     }
 
+    @Autowired
+    public void setVoteService(VoteService voteService) {
+        this.voteService = voteService;
+    }
+
     @TokenRequired
     @RoleRequired(roles = {Role.ROLE_USER, Role.ROLE_ADMIN})
     @PostMapping
     public Vote createNewVote(@PathVariable Long pollId,
                               @RequestAttribute String username,
                               @RequestBody CreateNewVoteForm form) {
-        if (voteDAO.existsByPollIdAndUser_Username(pollId, username)) {
+        if (voteService.existsByPollIdAndUsername(pollId, username)) {
             throw new RuntimeException("不能重复投票");
         }
 
@@ -55,6 +59,6 @@ public class VoteController {
         vote.setPoll(poll);
         vote.setChoice(choice);
 
-        return voteDAO.save(vote);
+        return voteService.create(vote);
     }
 }
