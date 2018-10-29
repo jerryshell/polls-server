@@ -2,7 +2,6 @@ package cn.jerryshell.polls.controller;
 
 import cn.jerryshell.polls.annotation.RoleRequired;
 import cn.jerryshell.polls.annotation.TokenRequired;
-import cn.jerryshell.polls.dao.UserDAO;
 import cn.jerryshell.polls.exception.ResourceNotFoundException;
 import cn.jerryshell.polls.model.Choice;
 import cn.jerryshell.polls.model.Poll;
@@ -13,6 +12,7 @@ import cn.jerryshell.polls.payload.PollStatusResponse;
 import cn.jerryshell.polls.payload.UpdatePollForm;
 import cn.jerryshell.polls.service.ChoiceService;
 import cn.jerryshell.polls.service.PollService;
+import cn.jerryshell.polls.service.UserService;
 import cn.jerryshell.polls.service.VoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,12 +25,15 @@ import java.util.List;
 @RestController
 @RequestMapping("/polls")
 public class PollController {
+    private UserService userService;
     private PollService pollService;
     private ChoiceService choiceService;
     private VoteService voteService;
 
-    // TODO
-    private UserDAO userDAO;
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
 
     @Autowired
     public void setPollService(PollService pollService) {
@@ -45,11 +48,6 @@ public class PollController {
     @Autowired
     public void setVoteService(VoteService voteService) {
         this.voteService = voteService;
-    }
-
-    @Autowired
-    public void setUserDAO(UserDAO userDAO) {
-        this.userDAO = userDAO;
     }
 
     @GetMapping("/{id}")
@@ -88,7 +86,7 @@ public class PollController {
     @PostMapping
     public Poll createNewPoll(@RequestAttribute String username,
                               @Valid @RequestBody CreateNewPollForm form) {
-        User user = userDAO.findByUsername(username)
+        User user = userService.findByUsername(username)
                 .orElseThrow(() -> ResourceNotFoundException.build("User", "Username", username));
 
         Poll poll = new Poll();

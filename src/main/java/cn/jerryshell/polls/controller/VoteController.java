@@ -2,12 +2,12 @@ package cn.jerryshell.polls.controller;
 
 import cn.jerryshell.polls.annotation.RoleRequired;
 import cn.jerryshell.polls.annotation.TokenRequired;
-import cn.jerryshell.polls.dao.UserDAO;
 import cn.jerryshell.polls.exception.ResourceNotFoundException;
 import cn.jerryshell.polls.model.*;
 import cn.jerryshell.polls.payload.CreateNewVoteForm;
 import cn.jerryshell.polls.service.ChoiceService;
 import cn.jerryshell.polls.service.PollService;
+import cn.jerryshell.polls.service.UserService;
 import cn.jerryshell.polls.service.VoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -15,16 +15,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/polls/{pollId}/votes")
 public class VoteController {
+    private UserService userService;
     private PollService pollService;
     private ChoiceService choiceService;
     private VoteService voteService;
 
-    // TODO
-    private UserDAO userDAO;
-
     @Autowired
-    public VoteController(UserDAO userDAO) {
-        this.userDAO = userDAO;
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
     @Autowired
@@ -52,7 +50,7 @@ public class VoteController {
             throw new RuntimeException("不能重复投票");
         }
 
-        User user = userDAO.findByUsername(username)
+        User user = userService.findByUsername(username)
                 .orElseThrow(() -> ResourceNotFoundException.build("User", "Username", username));
         Poll poll = pollService.findById(pollId)
                 .orElseThrow(() -> ResourceNotFoundException.build("Poll", "ID", pollId));
