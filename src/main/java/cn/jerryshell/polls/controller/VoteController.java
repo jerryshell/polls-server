@@ -33,7 +33,7 @@ public class VoteController {
     @PostMapping
     public Vote createNewVote(@PathVariable Long pollId,
                               @RequestAttribute String username,
-                              @RequestBody CreateNewVoteForm createNewVoteForm) {
+                              @RequestBody CreateNewVoteForm form) {
         if (voteDAO.existsByPollIdAndUser_Username(pollId, username)) {
             throw new RuntimeException("不能重复投票");
         }
@@ -42,8 +42,8 @@ public class VoteController {
                 .orElseThrow(() -> ResourceNotFoundException.build("User", "Username", username));
         Poll poll = pollDAO.findById(pollId)
                 .orElseThrow(() -> ResourceNotFoundException.build("Poll", "ID", pollId));
-        Choice choice = choiceDAO.findById(createNewVoteForm.getChoiceId())
-                .orElseThrow(() -> ResourceNotFoundException.build("Choice", "ID", createNewVoteForm.getChoiceId()));
+        Choice choice = choiceDAO.findById(form.getChoiceId())
+                .orElseThrow(() -> ResourceNotFoundException.build("Choice", "ID", form.getChoiceId()));
 
         Vote vote = new Vote();
         vote.setUser(user);

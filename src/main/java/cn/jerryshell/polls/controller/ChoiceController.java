@@ -42,12 +42,12 @@ public class ChoiceController {
     @RoleRequired(roles = {Role.ROLE_ADMIN})
     @PostMapping
     public Choice createNewChoice(@PathVariable Long pollId,
-                                  @Valid @RequestBody CreateNewChoiceForm createNewChoiceForm) {
+                                  @Valid @RequestBody CreateNewChoiceForm form) {
         Poll poll = pollDAO.findById(pollId)
                 .orElseThrow(() -> ResourceNotFoundException.build("Poll", "ID", pollId));
 
         Choice choice = new Choice();
-        choice.setText(createNewChoiceForm.getText());
+        choice.setText(form.getText());
         choice.setPoll(poll);
         return choiceDAO.save(choice);
     }
@@ -57,7 +57,7 @@ public class ChoiceController {
     @PutMapping("/{id}")
     public Choice updateChoice(@PathVariable Long pollId,
                                @PathVariable Long id,
-                               @Valid @RequestBody UpdateChoiceForm updateChoiceForm) {
+                               @Valid @RequestBody UpdateChoiceForm form) {
         if (!pollDAO.existsById(pollId)) {
             throw ResourceNotFoundException.build("Poll", "ID", pollId);
         }
@@ -65,7 +65,7 @@ public class ChoiceController {
         Choice choice = choiceDAO.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.build("Choice", "ID", id));
 
-        choice.setText(updateChoiceForm.getText());
+        choice.setText(form.getText());
         return choiceDAO.save(choice);
     }
 

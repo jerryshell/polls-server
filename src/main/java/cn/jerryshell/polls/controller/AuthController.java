@@ -52,8 +52,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login(@Valid @RequestBody LoginForm loginForm) {
-        User userFromDB = userDAO.findByUsernameAndPassword(loginForm.getUsername(), loginForm.getPassword())
+    public String login(@Valid @RequestBody LoginForm form) {
+        User userFromDB = userDAO.findByUsernameAndPassword(form.getUsername(), form.getPassword())
                 .orElseThrow(() -> new RuntimeException("登录失败，用户名或密码错误"));
         return JWTUtil.sign(userFromDB.getUsername(), null, userFromDB.getRole());
     }

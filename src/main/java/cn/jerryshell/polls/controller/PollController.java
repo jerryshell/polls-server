@@ -84,12 +84,12 @@ public class PollController {
     @TokenRequired
     @RoleRequired(roles = {Role.ROLE_ADMIN})
     @PostMapping
-    public Poll createNewPoll(@Valid @RequestBody CreateNewPollForm createNewPollForm,
-                              @RequestAttribute String username) {
+    public Poll createNewPoll(@RequestAttribute String username,
+                              @Valid @RequestBody CreateNewPollForm form) {
         User user = userDAO.findByUsername(username)
                 .orElseThrow(() -> ResourceNotFoundException.build("User", "Username", username));
         Poll poll = new Poll();
-        poll.setQuestion(createNewPollForm.getQuestion());
+        poll.setQuestion(form.getQuestion());
         poll.setUser(user);
         return pollDAO.save(poll);
     }
@@ -98,10 +98,10 @@ public class PollController {
     @RoleRequired(roles = {Role.ROLE_ADMIN})
     @PutMapping("/{id}")
     public Poll updatePoll(@PathVariable Long id,
-                           @Valid @RequestBody UpdatePollForm updatePollForm) {
+                           @Valid @RequestBody UpdatePollForm form) {
         Poll poll = pollDAO.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.build("Poll", "ID", id));
-        poll.setQuestion(updatePollForm.getQuestion());
+        poll.setQuestion(form.getQuestion());
         return pollDAO.save(poll);
     }
 

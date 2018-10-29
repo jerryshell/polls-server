@@ -53,19 +53,21 @@ public class UserController {
 
     @TokenRequired
     @PutMapping
-    public User updateUserInfo(@Valid @RequestBody UserInfoUpdateForm userInfoUpdateForm, @RequestAttribute String username) {
+    public User updateUserInfo(@RequestAttribute String username,
+                               @Valid @RequestBody UserInfoUpdateForm form) {
         User user = userDAO.findByUsername(username)
                 .orElseThrow(() -> ResourceNotFoundException.build("User", "Username", username));
-        user.setEmail(userInfoUpdateForm.getEmail());
+        user.setEmail(form.getEmail());
         return userDAO.save(user);
     }
 
     @TokenRequired
     @PutMapping("/password")
-    public User updateUserPassword(@Valid @RequestBody UserPasswordUpdateForm userPasswordUpdateForm, @RequestAttribute String username) {
+    public User updateUserPassword(@RequestAttribute String username,
+                                   @Valid @RequestBody UserPasswordUpdateForm form) {
         User user = userDAO.findByUsername(username)
                 .orElseThrow(() -> ResourceNotFoundException.build("User", "Username", username));
-        user.setPassword(userPasswordUpdateForm.getPassword());
+        user.setPassword(form.getPassword());
         return userDAO.save(user);
     }
 
