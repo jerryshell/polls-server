@@ -80,6 +80,8 @@ public class PollsApplicationTests {
 
         // get token
         LoginForm loginForm = new LoginForm();
+        loginForm.setUsername("admin");
+        loginForm.setPassword("123");
         String token = mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(objectMapper.writeValueAsString(loginForm)))
