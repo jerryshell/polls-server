@@ -1,12 +1,12 @@
 package cn.jerryshell.polls.controller;
 
 import cn.jerryshell.polls.annotation.TokenRequired;
-import cn.jerryshell.polls.dao.UserDAO;
 import cn.jerryshell.polls.exception.ResourceNotFoundException;
 import cn.jerryshell.polls.model.Role;
 import cn.jerryshell.polls.model.User;
 import cn.jerryshell.polls.payload.LoginForm;
 import cn.jerryshell.polls.payload.RegisterForm;
+import cn.jerryshell.polls.service.UserService;
 import cn.jerryshell.polls.util.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +18,11 @@ import javax.validation.constraints.NotBlank;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    private UserDAO userDAO;
+    private UserService userService;
 
     @Autowired
-    public void setUserDAO(UserDAO userDAO) {
-        this.userDAO = userDAO;
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
     @PostMapping("/register")
@@ -34,12 +34,12 @@ public class AuthController {
         }
 
         @NotBlank String username = registerForm.getUsername();
-        if (userDAO.existsByUsername(username)) {
+        if (userService.existsByUsername(username)) {
             throw new RuntimeException("注册失败，用户名已经存在");
         }
 
         @NotBlank @Email String email = registerForm.getEmail();
-        if (userDAO.existsByEmail(email)) {
+        if (userService.existsByEmail(email)) {
             throw new RuntimeException("注册失败，邮箱已经被使用");
         }
 
@@ -48,12 +48,12 @@ public class AuthController {
         user.setPassword(password);
         user.setEmail(email);
         user.setRole(Role.ROLE_USER);
-        return userDAO.save(user);
+        return userService.create(user);
     }
 
     @PostMapping("/login")
     public String login(@Valid @RequestBody LoginForm form) {
-        User userFromDB = userDAO.findByUsernameAndPassword(form.getUsername(), form.getPassword())
+        User userFromDB = userService.findByUsernameAndPassword(form.getUsername(), form.getPassword())
                 .orElseThrow(() -> new RuntimeException("登录失败，用户名或密码错误"));
         return JWTUtil.sign(userFromDB.getUsername(), null, userFromDB.getRole());
     }
@@ -61,7 +61,7 @@ public class AuthController {
     @TokenRequired
     @GetMapping("/verify")
     public User verify(@RequestAttribute String username) {
-        return userDAO.findByUsername(username)
+        return userService.findByUsername(username)
                 .orElseThrow(() -> ResourceNotFoundException.build("User", "Username", username));
     }
 }
