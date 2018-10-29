@@ -1,5 +1,8 @@
 package cn.jerryshell.polls;
 
+import cn.jerryshell.polls.payload.CreateNewPollForm;
+import cn.jerryshell.polls.payload.LoginForm;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,6 +25,7 @@ public class PollsApplicationTests {
 
     @Autowired
     private MockMvc mockMvc;
+
 
     @Test
     public void testAuthControllerAndUserController() throws Exception {
@@ -72,13 +76,24 @@ public class PollsApplicationTests {
                 .andExpect(jsonPath("$[0].choiceId").value(1))
                 .andExpect(jsonPath("$[0].choiceCount").value(2));
 
+        ObjectMapper objectMapper = new ObjectMapper();
+
         // get token
-        JSONObject loginForm = new JSONObject();
-        loginForm.put("username", "admin");
-        loginForm.put("password", "123");
-        String token = mockMvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON_UTF8).content(loginForm.toString()))
+        LoginForm loginForm = new LoginForm();
+        String token = mockMvc.perform(post("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(loginForm)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
+
+        // create new poll
+        CreateNewPollForm createNewPollForm = new CreateNewPollForm();
+        createNewPollForm.setQuestion("new question");
+        mockMvc.perform(post("/polls")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(createNewPollForm))
+                .header("Authorization", token))
+                .andExpect(status().isOk());
     }
 
 }
