@@ -3,7 +3,6 @@ package cn.jerryshell.polls.controller;
 import cn.jerryshell.polls.annotation.RoleRequired;
 import cn.jerryshell.polls.annotation.TokenRequired;
 import cn.jerryshell.polls.dao.ChoiceDAO;
-import cn.jerryshell.polls.dao.PollDAO;
 import cn.jerryshell.polls.dao.UserDAO;
 import cn.jerryshell.polls.dao.VoteDAO;
 import cn.jerryshell.polls.exception.ResourceNotFoundException;
@@ -14,6 +13,7 @@ import cn.jerryshell.polls.model.User;
 import cn.jerryshell.polls.payload.CreateNewPollForm;
 import cn.jerryshell.polls.payload.PollStatusResponse;
 import cn.jerryshell.polls.payload.UpdatePollForm;
+import cn.jerryshell.polls.service.PollService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,14 +25,15 @@ import java.util.List;
 @RestController
 @RequestMapping("/polls")
 public class PollController {
-    private PollDAO pollDAO;
+    private PollService pollService;
+
     private UserDAO userDAO;
     private ChoiceDAO choiceDAO;
     private VoteDAO voteDAO;
 
     @Autowired
-    public void setPollDAO(PollDAO pollDAO) {
-        this.pollDAO = pollDAO;
+    public void setPollService(PollService pollService) {
+        this.pollService = pollService;
     }
 
     @Autowired
@@ -52,18 +53,18 @@ public class PollController {
 
     @GetMapping("/{id}")
     public Poll findById(@PathVariable Long id) {
-        return pollDAO.findById(id)
+        return pollService.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.build("Poll", "ID", id));
     }
 
     @GetMapping
     public List<Poll> findAll() {
-        return pollDAO.findAll();
+        return pollService.findAll();
     }
 
     @GetMapping("/{id}/status")
     public List<PollStatusResponse> status(@PathVariable Long id) {
-        if (!pollDAO.existsById(id)) {
+        if (!pollService.existsById(id)) {
             throw ResourceNotFoundException.build("Poll", "ID", id);
         }
 
@@ -88,10 +89,11 @@ public class PollController {
                               @Valid @RequestBody CreateNewPollForm form) {
         User user = userDAO.findByUsername(username)
                 .orElseThrow(() -> ResourceNotFoundException.build("User", "Username", username));
+
         Poll poll = new Poll();
         poll.setQuestion(form.getQuestion());
         poll.setUser(user);
-        return pollDAO.save(poll);
+        return pollService.create(poll);
     }
 
     @TokenRequired
@@ -99,20 +101,21 @@ public class PollController {
     @PutMapping("/{id}")
     public Poll updatePoll(@PathVariable Long id,
                            @Valid @RequestBody UpdatePollForm form) {
-        Poll poll = pollDAO.findById(id)
+        Poll poll = pollService.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.build("Poll", "ID", id));
+
         poll.setQuestion(form.getQuestion());
-        return pollDAO.save(poll);
+        return pollService.update(poll);
     }
 
     @TokenRequired
     @RoleRequired(roles = {Role.ROLE_ADMIN})
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePoll(@PathVariable Long id) {
-        if (!pollDAO.existsById(id)) {
+        if (!pollService.existsById(id)) {
             throw ResourceNotFoundException.build("Poll", "ID", id);
         }
-        pollDAO.deleteById(id);
+        pollService.delete(id);
         return ResponseEntity.ok().build();
     }
 }

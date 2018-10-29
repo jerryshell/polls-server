@@ -3,29 +3,34 @@ package cn.jerryshell.polls.controller;
 import cn.jerryshell.polls.annotation.RoleRequired;
 import cn.jerryshell.polls.annotation.TokenRequired;
 import cn.jerryshell.polls.dao.ChoiceDAO;
-import cn.jerryshell.polls.dao.PollDAO;
 import cn.jerryshell.polls.dao.UserDAO;
 import cn.jerryshell.polls.dao.VoteDAO;
 import cn.jerryshell.polls.exception.ResourceNotFoundException;
 import cn.jerryshell.polls.model.*;
 import cn.jerryshell.polls.payload.CreateNewVoteForm;
+import cn.jerryshell.polls.service.PollService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/polls/{pollId}/votes")
 public class VoteController {
+    private PollService pollService;
+
     private VoteDAO voteDAO;
-    private PollDAO pollDAO;
     private UserDAO userDAO;
     private ChoiceDAO choiceDAO;
 
     @Autowired
-    public VoteController(VoteDAO voteDAO, PollDAO pollDAO, UserDAO userDAO, ChoiceDAO choiceDAO) {
+    public VoteController(VoteDAO voteDAO, UserDAO userDAO, ChoiceDAO choiceDAO) {
         this.voteDAO = voteDAO;
-        this.pollDAO = pollDAO;
         this.userDAO = userDAO;
         this.choiceDAO = choiceDAO;
+    }
+
+    @Autowired
+    public void setPollService(PollService pollService) {
+        this.pollService = pollService;
     }
 
     @TokenRequired
@@ -40,7 +45,7 @@ public class VoteController {
 
         User user = userDAO.findByUsername(username)
                 .orElseThrow(() -> ResourceNotFoundException.build("User", "Username", username));
-        Poll poll = pollDAO.findById(pollId)
+        Poll poll = pollService.findById(pollId)
                 .orElseThrow(() -> ResourceNotFoundException.build("Poll", "ID", pollId));
         Choice choice = choiceDAO.findById(form.getChoiceId())
                 .orElseThrow(() -> ResourceNotFoundException.build("Choice", "ID", form.getChoiceId()));

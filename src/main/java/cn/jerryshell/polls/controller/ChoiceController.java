@@ -3,13 +3,13 @@ package cn.jerryshell.polls.controller;
 import cn.jerryshell.polls.annotation.RoleRequired;
 import cn.jerryshell.polls.annotation.TokenRequired;
 import cn.jerryshell.polls.dao.ChoiceDAO;
-import cn.jerryshell.polls.dao.PollDAO;
 import cn.jerryshell.polls.exception.ResourceNotFoundException;
 import cn.jerryshell.polls.model.Choice;
 import cn.jerryshell.polls.model.Poll;
 import cn.jerryshell.polls.model.Role;
 import cn.jerryshell.polls.payload.CreateNewChoiceForm;
 import cn.jerryshell.polls.payload.UpdateChoiceForm;
+import cn.jerryshell.polls.service.PollService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +20,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/polls/{pollId}/choices")
 public class ChoiceController {
-    private PollDAO pollDAO;
+    private PollService pollService;
+
     private ChoiceDAO choiceDAO;
 
     @Autowired
-    public void setPollDAO(PollDAO pollDAO) {
-        this.pollDAO = pollDAO;
+    public void setPollService(PollService pollService) {
+        this.pollService = pollService;
     }
 
     @Autowired
@@ -43,7 +44,7 @@ public class ChoiceController {
     @PostMapping
     public Choice createNewChoice(@PathVariable Long pollId,
                                   @Valid @RequestBody CreateNewChoiceForm form) {
-        Poll poll = pollDAO.findById(pollId)
+        Poll poll = pollService.findById(pollId)
                 .orElseThrow(() -> ResourceNotFoundException.build("Poll", "ID", pollId));
 
         Choice choice = new Choice();
@@ -58,7 +59,7 @@ public class ChoiceController {
     public Choice updateChoice(@PathVariable Long pollId,
                                @PathVariable Long id,
                                @Valid @RequestBody UpdateChoiceForm form) {
-        if (!pollDAO.existsById(pollId)) {
+        if (!pollService.existsById(pollId)) {
             throw ResourceNotFoundException.build("Poll", "ID", pollId);
         }
 
@@ -74,7 +75,7 @@ public class ChoiceController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteChoice(@PathVariable Long pollId,
                                           @PathVariable Long id) {
-        if (!pollDAO.existsById(pollId)) {
+        if (!pollService.existsById(pollId)) {
             throw ResourceNotFoundException.build("Poll", "ID", pollId);
         }
 
