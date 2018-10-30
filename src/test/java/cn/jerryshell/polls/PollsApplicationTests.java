@@ -2,6 +2,7 @@ package cn.jerryshell.polls;
 
 import cn.jerryshell.polls.payload.CreateNewPollForm;
 import cn.jerryshell.polls.payload.LoginForm;
+import cn.jerryshell.polls.payload.UpdatePollForm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -13,8 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -96,6 +96,26 @@ public class PollsApplicationTests {
                 .content(objectMapper.writeValueAsString(createNewPollForm))
                 .header("Authorization", token))
                 .andExpect(status().isOk());
+
+        // update poll
+        UpdatePollForm updatePollForm = new UpdatePollForm();
+        updatePollForm.setQuestion("update question");
+        mockMvc.perform(put("/polls/1")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(updatePollForm))
+                .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.question").value("update question"))
+                .andExpect(jsonPath("$.id").value(1));
+
+        // delete poll
+        mockMvc.perform(delete("/polls/1").header("Authorization", token))
+                .andExpect(status().isOk());
+        mockMvc.perform(delete("/polls/2").header("Authorization", token))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/polls"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
 }
