@@ -2,9 +2,10 @@ package cn.jerryshell.polls;
 
 import cn.jerryshell.polls.payload.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.json.JSONObject;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,14 +20,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class PollsApplicationTests {
 
     @Autowired
     private MockMvc mockMvc;
 
-
     @Test
-    public void testAuthControllerAndUserController() throws Exception {
+    public void testA_AuthControllerAndUserController() throws Exception {
         // find
         mockMvc.perform(get("/users/username/admin"))
                 .andExpect(jsonPath("$.username").value("admin"));
@@ -36,10 +37,13 @@ public class PollsApplicationTests {
                 .andExpect(status().isNotFound());
 
         // login
-        JSONObject loginForm = new JSONObject();
-        loginForm.put("username", "admin");
-        loginForm.put("password", "123");
-        String token = mockMvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON_UTF8).content(loginForm.toString()))
+        ObjectMapper objectMapper = new ObjectMapper();
+        LoginForm loginForm = new LoginForm();
+        loginForm.setUsername("admin");
+        loginForm.setPassword("123");
+        String token = mockMvc.perform(post("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(loginForm)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         mockMvc.perform(get("/auth/verify").header("Authorization", token))
@@ -47,18 +51,20 @@ public class PollsApplicationTests {
                 .andExpect(jsonPath("$.username").value("admin"));
 
         // register
-        JSONObject registerForm = new JSONObject();
-        registerForm.put("username", "new_user");
-        registerForm.put("password", "111");
-        registerForm.put("password2", "111");
-        registerForm.put("email", "new_user@email.com");
-        mockMvc.perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON_UTF8).content(registerForm.toString()))
+        RegisterForm registerForm = new RegisterForm();
+        registerForm.setUsername("new_user");
+        registerForm.setPassword("111");
+        registerForm.setPassword2("111");
+        registerForm.setEmail("new_user@email.com");
+        mockMvc.perform(post("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(registerForm)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("new_user"));
     }
 
     @Test
-    public void testPollController() throws Exception {
+    public void testB_PollController() throws Exception {
         // find
         mockMvc.perform(get("/polls"))
                 .andExpect(status().isOk())
@@ -74,9 +80,8 @@ public class PollsApplicationTests {
                 .andExpect(jsonPath("$[0].choiceId").value(1))
                 .andExpect(jsonPath("$[0].choiceCount").value(2));
 
-        ObjectMapper objectMapper = new ObjectMapper();
-
         // get token
+        ObjectMapper objectMapper = new ObjectMapper();
         LoginForm loginForm = new LoginForm();
         loginForm.setUsername("admin");
         loginForm.setPassword("123");
@@ -107,17 +112,15 @@ public class PollsApplicationTests {
                 .andExpect(jsonPath("$.id").value(1));
 
         // delete poll
-        mockMvc.perform(delete("/polls/1").header("Authorization", token))
-                .andExpect(status().isOk());
         mockMvc.perform(delete("/polls/2").header("Authorization", token))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/polls"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
     @Test
-    public void testChoiceController() throws Exception {
+    public void testC_ChoiceController() throws Exception {
         // find
         mockMvc.perform(get("/polls/1/choices"))
                 .andExpect(status().isOk())
