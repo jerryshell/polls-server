@@ -14,10 +14,12 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+import java.util.Date;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+    private static final Long EXPIRES_AT = (long) (24 * 60 * 60 * 1000);
     private UserService userService;
 
     @Autowired
@@ -55,7 +57,8 @@ public class AuthController {
     public String login(@Valid @RequestBody LoginForm form) {
         User userFromDB = userService.findByUsernameAndPassword(form.getUsername(), form.getPassword())
                 .orElseThrow(() -> new RuntimeException("登录失败，用户名或密码错误"));
-        return JWTUtil.sign(userFromDB.getUsername(), null, userFromDB.getRole());
+        Date expires = new Date(System.currentTimeMillis() + EXPIRES_AT);
+        return JWTUtil.sign(userFromDB.getUsername(), expires, userFromDB.getRole());
     }
 
     @TokenRequired
