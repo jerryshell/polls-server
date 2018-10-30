@@ -1,8 +1,6 @@
 package cn.jerryshell.polls;
 
-import cn.jerryshell.polls.payload.CreateNewPollForm;
-import cn.jerryshell.polls.payload.LoginForm;
-import cn.jerryshell.polls.payload.UpdatePollForm;
+import cn.jerryshell.polls.payload.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -116,6 +114,54 @@ public class PollsApplicationTests {
         mockMvc.perform(get("/polls"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    public void testChoiceController() throws Exception {
+        // find
+        mockMvc.perform(get("/polls/1/choices"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].text").value("One"));
+
+        // get token
+        ObjectMapper objectMapper = new ObjectMapper();
+        LoginForm loginForm = new LoginForm();
+        loginForm.setUsername("admin");
+        loginForm.setPassword("123");
+        String token = mockMvc.perform(post("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(loginForm)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // create new choice
+        CreateNewChoiceForm createNewChoiceForm = new CreateNewChoiceForm();
+        createNewChoiceForm.setText("new choice");
+        mockMvc.perform(post("/polls/1/choices")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(createNewChoiceForm))
+                .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.text").value("new choice"));
+
+        // update choice
+        UpdateChoiceForm updateChoiceForm = new UpdateChoiceForm();
+        updateChoiceForm.setText("update choice");
+        mockMvc.perform(put("/polls/1/choices/1")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(updateChoiceForm))
+                .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.text").value("update choice"));
+
+        // delete choice
+        mockMvc.perform(delete("/polls/1/choices/1").header("Authorization", token))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/polls/1/choices"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
     }
 
 }
