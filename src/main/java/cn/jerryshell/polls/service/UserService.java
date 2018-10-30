@@ -2,6 +2,7 @@ package cn.jerryshell.polls.service;
 
 import cn.jerryshell.polls.dao.UserDAO;
 import cn.jerryshell.polls.model.User;
+import cn.jerryshell.polls.util.MD5Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,14 +26,17 @@ public class UserService {
     }
 
     public Optional<User> findByUsernameAndPassword(String username, String password) {
+        password = MD5Util.MD5Base64(password);
         return userDAO.findByUsernameAndPassword(username, password);
     }
 
     public User update(User user) {
+        user.setPassword(MD5Util.MD5Base64(user.getPassword()));
         return userDAO.save(user);
     }
 
     public User create(User user) {
+        user.setPassword(MD5Util.MD5Base64(user.getPassword()));
         return userDAO.save(user);
     }
 

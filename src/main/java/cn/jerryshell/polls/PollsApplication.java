@@ -1,10 +1,10 @@
 package cn.jerryshell.polls;
 
-import cn.jerryshell.polls.dao.ChoiceDAO;
-import cn.jerryshell.polls.dao.PollDAO;
-import cn.jerryshell.polls.dao.UserDAO;
-import cn.jerryshell.polls.dao.VoteDAO;
 import cn.jerryshell.polls.model.*;
+import cn.jerryshell.polls.service.ChoiceService;
+import cn.jerryshell.polls.service.PollService;
+import cn.jerryshell.polls.service.UserService;
+import cn.jerryshell.polls.service.VoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -17,37 +17,37 @@ import java.util.List;
 @EnableSwagger2
 public class PollsApplication implements CommandLineRunner {
 
-    private UserDAO userDAO;
-    private PollDAO pollDAO;
-    private ChoiceDAO choiceDAO;
-    private VoteDAO voteDAO;
+    private UserService userService;
+    private PollService pollService;
+    private ChoiceService choiceService;
+    private VoteService voteService;
 
     public static void main(String[] args) {
         SpringApplication.run(PollsApplication.class, args);
     }
 
     @Autowired
-    public void setUserDAO(UserDAO userDAO) {
-        this.userDAO = userDAO;
+    public void setUserService(UserService userDAO) {
+        this.userService = userDAO;
     }
 
     @Autowired
-    public void setPollDAO(PollDAO pollDAO) {
-        this.pollDAO = pollDAO;
+    public void setPollService(PollService pollDAO) {
+        this.pollService = pollDAO;
     }
 
     @Autowired
-    public void setChoiceDAO(ChoiceDAO choiceDAO) {
-        this.choiceDAO = choiceDAO;
+    public void setChoiceService(ChoiceService choiceDAO) {
+        this.choiceService = choiceDAO;
     }
 
     @Autowired
-    public void setVoteDAO(VoteDAO voteDAO) {
-        this.voteDAO = voteDAO;
+    public void setVoteService(VoteService voteDAO) {
+        this.voteService = voteDAO;
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         initUserData();
         initPollData();
         initChoiceData();
@@ -55,15 +55,15 @@ public class PollsApplication implements CommandLineRunner {
     }
 
     private void initVoteData() {
-        User admin = userDAO.findByUsername("admin")
+        User admin = userService.findByUsername("admin")
                 .orElseThrow(RuntimeException::new);
-        User vip = userDAO.findByUsername("vip")
+        User vip = userService.findByUsername("vip")
                 .orElseThrow(RuntimeException::new);
-        User user = userDAO.findByUsername("user")
+        User user = userService.findByUsername("user")
                 .orElseThrow(RuntimeException::new);
-        Poll poll = pollDAO.findByUser(admin).get(0);
+        Poll poll = pollService.findByUserId(admin.getId()).get(0);
         assert poll != null;
-        List<Choice> choiceList = choiceDAO.findByPollId(poll.getId());
+        List<Choice> choiceList = choiceService.findByPollId(poll.getId());
         assert choiceList.size() == 2;
         Choice choiceOne = choiceList.get(0);
 
@@ -77,14 +77,14 @@ public class PollsApplication implements CommandLineRunner {
         vote2.setChoice(choiceOne);
         vote2.setPoll(poll);
 
-        voteDAO.save(vote1);
-        voteDAO.save(vote2);
+        voteService.create(vote1);
+        voteService.create(vote2);
     }
 
     private void initChoiceData() {
-        User admin = userDAO.findByUsername("admin")
+        User admin = userService.findByUsername("admin")
                 .orElseThrow(RuntimeException::new);
-        Poll poll = pollDAO.findByUser(admin).get(0);
+        Poll poll = pollService.findByUserId(admin.getId()).get(0);
         assert poll != null;
 
         Choice choiceOne = new Choice();
@@ -95,19 +95,19 @@ public class PollsApplication implements CommandLineRunner {
         choiceTwo.setPoll(poll);
         choiceTwo.setText("Two");
 
-        choiceDAO.save(choiceOne);
-        choiceDAO.save(choiceTwo);
+        choiceService.create(choiceOne);
+        choiceService.create(choiceTwo);
     }
 
     private void initPollData() {
-        User admin = userDAO.findByUsername("admin")
+        User admin = userService.findByUsername("admin")
                 .orElseThrow(RuntimeException::new);
 
         Poll poll = new Poll();
         poll.setQuestion("One or Two");
         poll.setUser(admin);
 
-        pollDAO.save(poll);
+        pollService.create(poll);
     }
 
     private void initUserData() {
@@ -129,8 +129,8 @@ public class PollsApplication implements CommandLineRunner {
         user.setEmail("user@email.com");
         user.setRole(Role.ROLE_USER);
 
-        userDAO.save(admin);
-        userDAO.save(vip);
-        userDAO.save(user);
+        userService.create(admin);
+        userService.create(vip);
+        userService.create(user);
     }
 }

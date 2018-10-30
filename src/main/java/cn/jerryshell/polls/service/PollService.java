@@ -21,6 +21,10 @@ public class PollService {
         return pollDAO.findById(id);
     }
 
+    public List<Poll> findByUserId(Long userId) {
+        return pollDAO.findByUserId(userId);
+    }
+
     public List<Poll> findAll() {
         return pollDAO.findAll();
     }
