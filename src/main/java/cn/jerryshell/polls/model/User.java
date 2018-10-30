@@ -1,5 +1,6 @@
 package cn.jerryshell.polls.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,7 @@ import javax.validation.constraints.Size;
 @Getter
 @Setter
 @Entity
+@JsonIgnoreProperties(value = {"password"}, allowSetters = true)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
